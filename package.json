@@ -1,0 +1,78 @@
+{
+  "name": "quick-commit-msg",
+  "displayName": "quick-commit-msg",
+  "icon": "icon.png",
+  "description": "Automatically inserts the commit message from the current Git branch name.",
+  "version": "0.1.0",
+  "license": "MIT",
+  "publisher": "c75",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/avin/vscode-quick-commit-msg.git"
+  },
+  "engines": {
+    "vscode": "^1.66.0"
+  },
+  "categories": [
+    "Other"
+  ],
+  "activationEvents": [
+    "onStartupFinished",
+    "onSCMProvider:vscode.git"
+  ],
+  "main": "./out/extension.js",
+  "contributes": {
+    "commands": [
+      {
+        "command": "quick-commit-msg.fillFromBranch",
+        "title": "Fill commit message from branch",
+        "category": "Quick Commit Msg",
+        "icon": "$(git-commit)"
+      }
+    ],
+    "menus": {
+      "scm/title": [
+        {
+          "command": "quick-commit-msg.fillFromBranch",
+          "group": "navigation",
+          "when": "scmProvider == git"
+        }
+      ]
+    },
+    "configuration": {
+      "title": "Quick Commit Msg",
+      "properties": {
+        "quickCommitMsg.enableAutoFill": {
+          "type": "boolean",
+          "default": true,
+          "description": "Automatically prefill commit message from the current branch name."
+        },
+        "quickCommitMsg.commitTemplate": {
+          "type": "string",
+          "default": "{TASK}: ",
+          "markdownDescription": "Template for the commit message. Use `{TASK}` as a placeholder for the extracted task id.",
+          "pattern": ".*\\S.*",
+          "patternErrorMessage": "Template must not be empty."
+        }
+      }
+    }
+  },
+  "scripts": {
+    "vscode:prepublish": "npm run compile",
+    "compile": "tsc -p ./",
+    "watch": "tsc -watch -p ./",
+    "pretest": "npm run compile && npm run lint",
+    "lint": "eslint src",
+    "test": "vscode-test"
+  },
+  "devDependencies": {
+    "@types/vscode": "^1.66.0",
+    "@types/mocha": "^10.0.10",
+    "@types/node": "22.x",
+    "typescript-eslint": "^8.48.1",
+    "eslint": "^9.39.1",
+    "typescript": "^5.9.3",
+    "@vscode/test-cli": "^0.0.12",
+    "@vscode/test-electron": "^2.5.2"
+  }
+}
