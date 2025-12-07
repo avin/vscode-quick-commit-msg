@@ -1,9 +1,9 @@
 {
   "name": "quick-commit-msg",
-  "displayName": "quick-commit-msg",
+  "displayName": "Quick Commit Message by Branch",
   "icon": "icon.png",
   "description": "Automatically inserts the commit message from the current Git branch name.",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "license": "MIT",
   "publisher": "c75",
   "repository": {
@@ -26,7 +26,7 @@
       {
         "command": "quick-commit-msg.fillFromBranch",
         "title": "Fill commit message from branch",
-        "category": "Quick Commit Msg",
+        "category": "Quick Commit Message by Branch",
         "icon": "$(git-commit)"
       }
     ],
@@ -40,7 +40,7 @@
       ]
     },
     "configuration": {
-      "title": "Quick Commit Msg",
+      "title": "Quick Commit Message by Branch",
       "properties": {
         "quickCommitMsg.enableAutoFill": {
           "type": "boolean",
