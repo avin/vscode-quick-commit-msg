@@ -3,7 +3,7 @@
   "displayName": "Quick Commit Message by Branch",
   "icon": "icon.png",
   "description": "Automatically inserts the commit message from the current Git branch name.",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "license": "MIT",
   "publisher": "c75",
   "repository": {

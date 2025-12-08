@@ -4,6 +4,7 @@ import type { API as GitAPI, GitExtension, Repository } from './git';
 const TASK_TEMPLATE_PLACEHOLDER = '{TASK}';
 const lastAppliedMessages = new WeakMap<Repository, string>();
 const repositorySubscriptions = new WeakMap<Repository, vscode.Disposable>();
+const lastKnownBranches = new WeakMap<Repository, string | undefined>();
 
 export async function activate(context: vscode.ExtensionContext) {
 	const gitApi = await getGitApi();
@@ -39,7 +40,11 @@ function registerFillCommand(gitApi: GitAPI): vscode.Disposable {
 			return;
 		}
 
-		const updated = applyCommitMessage(repository, { force: true, autoFillEnabled: true });
+		const updated = applyCommitMessage(repository, {
+			force: true,
+			autoFillEnabled: true,
+			allowEmptyOnForce: true
+		});
 		if (!updated) {
 			void vscode.window.showInformationMessage('Commit message is already set or branch is undefined.');
 		}
@@ -66,10 +71,24 @@ function watchRepository(repository: Repository, context: vscode.ExtensionContex
 		return;
 	}
 
+	lastKnownBranches.set(repository, repository.state.HEAD?.name);
 	applyCommitMessage(repository, { force: false, autoFillEnabled: isAutoFillEnabled() });
 
 	const subscription = repository.state.onDidChange(() => {
-		applyCommitMessage(repository, { force: false, autoFillEnabled: isAutoFillEnabled() });
+		const previousBranch = lastKnownBranches.get(repository);
+		const currentBranch = repository.state.HEAD?.name;
+		const branchChanged = currentBranch !== previousBranch;
+		const autoFillEnabled = isAutoFillEnabled();
+
+		if (branchChanged) {
+			lastKnownBranches.set(repository, currentBranch);
+		}
+
+		applyCommitMessage(repository, {
+			force: branchChanged && autoFillEnabled,
+			autoFillEnabled,
+			allowEmptyOnForce: branchChanged && autoFillEnabled
+		});
 	});
 
 	repositorySubscriptions.set(repository, subscription);
@@ -80,11 +99,12 @@ function disposeRepository(repository: Repository) {
 	repositorySubscriptions.get(repository)?.dispose();
 	repositorySubscriptions.delete(repository);
 	lastAppliedMessages.delete(repository);
+	lastKnownBranches.delete(repository);
 }
 
 function applyCommitMessage(
 	repository: Repository,
-	options: { force: boolean; autoFillEnabled: boolean }
+	options: { force: boolean; autoFillEnabled: boolean; allowEmptyOnForce?: boolean }
 ): boolean {
 	if (!options.autoFillEnabled && !options.force) {
 		return false;
@@ -92,13 +112,16 @@ function applyCommitMessage(
 
 	const branchName = repository.state.HEAD?.name;
 	const taskId = extractTaskId(branchName);
-	if (!taskId) {
-		return false;
-	}
 
-	const messageFromBranch = buildMessageFromTask(taskId);
+	const messageFromBranch = taskId ? buildMessageFromTask(taskId) : undefined;
 
 	if (!messageFromBranch) {
+		if (options.force && options.allowEmptyOnForce) {
+			repository.inputBox.value = '';
+			lastAppliedMessages.set(repository, '');
+			return true;
+		}
+
 		return false;
 	}
 
